@@ -1,0 +1,22 @@
+keys:
+  - &mara age1sz8cfaaca4eayutadj6ge7zdu4j3y055tnqaupcs26thuhxw5cpquzvc7f
+  - &wakey age1jclm2wc3z9979rnqatas28zfs7dwa8v70mv26p7phl60msu4p4uqlqxwy6
+  - &wakey-rpc age1k9wpg2czremlz9rxljp6c47fchlhycnkcak7wm38lkmvc49a6agqy4we4e
+
+creation_rules:
+  - path_regex: secrets/[^/]+\.(yaml|json|env|ini|bin)$
+    key_groups:
+    - age:
+      - *mara
+      - *wakey
+      - *wakey-rpc
+  - path_regex: secrets/wakey-rpc/[^/]+\.((yaml|json|env|ini|secret))$
+    key_groups:
+    - age:
+      - *wakey-rpc
+      - *mara
+  - path_regex: secrets/wakey/[^/]+\.((yaml|json|env|ini|secret))$
+    key_groups:
+    - age:
+      - *wakey
+      - *mara
