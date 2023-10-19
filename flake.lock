@@ -618,11 +618,11 @@
         "v0_9_0": "v0_9_0"
       },
       "locked": {
-        "lastModified": 1697469753,
-        "narHash": "sha256-8b6QfneqwMIuAGGp/aEe5Nsck52XNq8Mp7uIc41sXJM=",
+        "lastModified": 1697721486,
+        "narHash": "sha256-+DHkl2lTuW2XjRDFgBcJEEo0SGVlZ1BbjOqlRNt9OJs=",
         "ref": "refs/heads/main",
-        "rev": "e2bd91ddc77f3093c7c03cc47dfd9552661b6360",
-        "revCount": 1835,
+        "rev": "d3451c183ccad78c324c23f98e5980d026c72ea8",
+        "revCount": 1941,
         "type": "git",
         "url": "ssh://git@github.com/unionlabs/union"
       },

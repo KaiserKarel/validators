@@ -15,13 +15,11 @@
           inherit system;
           modules = [
             union.nixosModules.unionvisor
+            union.nixosModules.hubble
+            sops-nix.nixosModules.sops
+            "${nixpkgs}/nixos/modules/virtualisation/openstack-config.nix"
             {
               system.stateVersion = "23.11";
-              # Base configuration for openstack-based VPSs
-              imports = [
-                "${nixpkgs}/nixos/modules/virtualisation/openstack-config.nix"
-                sops-nix.nixosModules.sops
-              ];
 
               sops = {
                 age.sshKeyPaths = [ "/etc/ssh/ssh_host_ed25519_key" ];
@@ -39,16 +37,29 @@
                     sopsFile = ./secrets/wakey-rpc/priv_validator_key.json;
                     path = "/var/lib/unionvisor/home/config/priv_validator_key.json";
                   };
+                  hasura-admin-secret = {
+                    restartUnits = [ "hubble.service" ];
+                    path = "/etc/hubble/hubble.key";
+                    sopsFile = ./secrets/wakey-rpc/hubble.yaml;
+                  };
                 };
               };
 
-              # Allow other validators to reach you
               networking.firewall.allowedTCPPorts = [ 80 443 26656 26657 ];
 
-              # Unionvisor module configuration
               services.unionvisor = {
                 enable = true;
                 moniker = "wakey-wakey-rpc";
+              };
+
+              services.hubble = {
+                enable = true;
+                url = "https://noble-pika-27.hasura.app/v1/graphql";
+                api-key-file = "/etc/hubble/hubble.key";
+                indexers = [
+                  { url = "http://localhost:26657"; type = "tendermint"; }
+                ];
+                metrics-addr = "0.0.0.0:9091";
               };
 
               nix = {
@@ -74,18 +85,27 @@
                   journald = { logs = [{ type = "journald"; }]; };
                   openmetrics = {
                     init_configs = { };
-                    instances = [{
-                      openmetrics_endpoint = "http://localhost:26660/metrics";
-                      namespace = "cometbft";
-                      metrics = [
-                        ".*"
-                      ];
-                    }];
+                    instances = [
+                      {
+                        openmetrics_endpoint = "http://localhost:26660/metrics";
+                        namespace = "cometbft";
+                        metrics = [
+                          ".*"
+                        ];
+                      }
+                      {
+                        openmetrics_endpoint = "http://localhost:9091/metrics";
+                        namespace = "hubble";
+                        metrics = [
+                          ".*"
+                        ];
+                        max_returned_metrics = 200000;
+                      }
+                    ];
                   };
                 };
               };
 
-              # OPTIONAL: Some useful inspection tools for when you SSH into your validator
               environment.systemPackages = with pkgs; [
                 bat
                 bottom
@@ -106,18 +126,13 @@
           inherit system;
           modules = [
             union.nixosModules.unionvisor
+            sops-nix.nixosModules.sops
+            "${nixpkgs}/nixos/modules/virtualisation/openstack-config.nix"
             {
               system.stateVersion = "23.11";
-              # Base configuration for openstack-based VPSs
-              imports = [
-                "${nixpkgs}/nixos/modules/virtualisation/openstack-config.nix"
-                sops-nix.nixosModules.sops
-              ];
 
-              # Allow other validators to reach you
               networking.firewall.allowedTCPPorts = [ 80 443 26656 26657 ];
 
-              # Unionvisor module configuration
               services.unionvisor = {
                 enable = true;
                 moniker = "wakey-wakey";
@@ -176,7 +191,6 @@
                 };
               };
 
-              # OPTIONAL: Some useful inspection tools for when you SSH into your validator
               environment.systemPackages = with pkgs; [
                 bat
                 bottom
